@@ -5,18 +5,18 @@
         android:key="hourformat"
         android:summaryOff="Civilian time"
         android:summaryOn="Military time"
-        android:text="Hello"
         android:title="24 Hour Format" />
     <CheckBoxPreference
         android:defaultValue="false"
         android:key="partialseconds"
+        android:summaryOff="Cheap Watch"
         android:summaryOn="Expensive watch"
         android:title="Partial Seconds?" />
     <ListPreference
-        android:defaultValue="1"
+        android:defaultValue="0"
         android:entries="@array/list_prefs"
         android:entryValues="@array/list_prefs"
         android:key="clockface"
-        android:summary="Current clock face: %s"
+        android:summary="Current clock face :|> %s"
         android:title="Clock Face Numerals" />
 </PreferenceScreen>

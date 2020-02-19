@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string-array name="list_prefs">
-        <item>none</item>
-        <item>regular numerals</item>
-        <item>roman numerals</item>
-        <item>math</item>
-        <item>crazy</item>
+        <item>No Numbers</item>
+        <item>Regular Numerals</item>
+        <item>Roman Numerals</item>
+        <item>Math Face</item>
+        <item>Crazy Face</item>
     </string-array>
 </resources>

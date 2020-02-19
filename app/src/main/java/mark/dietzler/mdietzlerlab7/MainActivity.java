@@ -58,24 +58,12 @@ public class MainActivity extends AppCompatActivity implements Observer{
         return super.onOptionsItemSelected(item);
     }
 
-//    @Override
-//    public void update(Observable observableInput, Object obsTimeTransfer) {
-//        String newTime = "";
-//        if(observableInput != null && observableInput instanceof ObservableTimeTransfer) {
-//            newTime += ((ObservableTimeTransfer) observableInput).container.getHour() + ":";
-//            newTime += ((ObservableTimeTransfer) observableInput).container.getMinute() + ":";
-//            newTime += ((ObservableTimeTransfer) observableInput).container.getSeconds();
-//
-//            //newTime += ((TimeContainer) obsTimeContainer).getHour();
-//        } else {
-//            newTime = "XX:XX:XX";
-//        }
-//
-//        TextView digitalClock = findViewById(R.id.digitalClock);
-//        digitalClock.setText(newTime);
-//    }
 
-    //from sarah
+    /**
+     *
+     * @param observableInput
+     * @param obsTimeTransfer
+     */
     @Override
     public void update(Observable observableInput, Object obsTimeTransfer) {
         String digitalClockTime = new String();
@@ -96,12 +84,12 @@ public class MainActivity extends AppCompatActivity implements Observer{
     protected void onResume() {
         super.onResume();
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        Boolean hour = prefs.getBoolean("hourformat", clock.hourformat);
-        String clockFace = prefs.getString("clockFace", clock.clockface);
-        Boolean partial = prefs.getBoolean("partialseconds", clock.partialseconds);
-        clock.clockface = clockFace;
-        clock.hourformat = hour;
-        clock.partialseconds = partial;
+        Boolean prefsHourFormat = prefs.getBoolean("hourformat", clock.hourformat);
+        String prefsClockFace = prefs.getString("clockFace", clock.clockface);
+        Boolean prefsPartialSecondsFormat = prefs.getBoolean("partialseconds", clock.partialseconds);
+        clock.clockface = prefsClockFace;
+        clock.hourformat = prefsHourFormat;
+        clock.partialseconds = prefsPartialSecondsFormat;
         clock.invalidate();
     }
 }

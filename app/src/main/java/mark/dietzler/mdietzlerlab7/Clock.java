@@ -26,7 +26,7 @@ public class Clock extends View implements TimeAnimator.TimeListener {
     final static float[] hourHand = new float[]{-05f, 0, 0, 30.5f, 05f, 0, 0, -05f, -05f, 0};
     int mWidth, mHeight;
     Boolean hourformat = Boolean.FALSE, partialseconds = Boolean.FALSE ;
-    String clockface = "roman numerals";
+    String clockface = "";
 
     public HourMinSec hourMinSec = new HourMinSec();
 
@@ -91,7 +91,7 @@ public class Clock extends View implements TimeAnimator.TimeListener {
             Rect src = new Rect(0,0,romanBitmap.getWidth(), romanBitmap.getHeight());
             canvas.drawBitmap(romanBitmap,null, dst, null);
         }
-        else if(clockface.compareTo("crazy") == 0){
+        else if(clockface.compareTo("crazy face") == 0){
             Resources resources = getResources();
             Bitmap crazyBitmap = BitmapFactory.decodeResource(resources, R.drawable.crazy);
             //Rect dst = new Rect((int)(-overallWidth/2),(int)(overallHeight/2), (int)(overallWidth/2), (int)(overallHeight/2));
@@ -99,7 +99,7 @@ public class Clock extends View implements TimeAnimator.TimeListener {
             Rect src = new Rect(0,0,crazyBitmap.getWidth(),crazyBitmap.getHeight());
             canvas.drawBitmap(crazyBitmap,null, dst, null);
         }
-        else if(clockface.compareTo("math") == 0){
+        else if(clockface.compareTo("math face") == 0){
             Resources resources = getResources();
             Bitmap mathBitmap = BitmapFactory.decodeResource(resources, R.drawable.math);
             Rect dst = new Rect(0,0,mWidth,mHeight);

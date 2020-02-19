@@ -6,10 +6,6 @@ import android.os.Bundle;
 import android.preference.Preference;
 import android.preference.PreferenceFragment;
 import android.support.v4.app.Fragment;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.TextView;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -22,8 +18,26 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-        Preference pref = findPreference(key);
-        pref.setSummary("");
+
+        Preference prefThatWasChanged = findPreference(key);
+
+        switch(key) {
+            case "hourformat":
+                //do nothing with hour format
+                prefThatWasChanged.setSummary("XXX");
+                break ;
+            case "clockFace":
+                String testClockFace = sharedPreferences.getString(key,"");
+                //sharedPreferences.edit().putString(key,"math").commit();
+                prefThatWasChanged.setSummary("YYY");
+                break ;
+            case "partialseconds":
+                //do nothing with second hand either
+                prefThatWasChanged.setSummary("ZZZ");
+                break ;
+        }
+
+
     }
 
     @Override
