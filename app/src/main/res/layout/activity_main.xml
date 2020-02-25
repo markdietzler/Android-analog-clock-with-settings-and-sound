@@ -9,8 +9,6 @@
     android:orientation="vertical"
     tools:context=".MainActivity">
 
-    <!-- class="mark.dietzler.mdietzlerlab7.AnalogClock" -->
-
     <view
         android:id="@+id/clock"
         class="mark.dietzler.mdietzlerlab7.Clock"

@@ -10,8 +10,6 @@ import android.view.MenuItem;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import org.w3c.dom.Text;
-
 import java.util.Observable;
 import java.util.Observer;
 
@@ -60,7 +58,7 @@ public class MainActivity extends AppCompatActivity implements Observer{
 
 
     /**
-     *
+     * sets the digital clock on the main clock view
      * @param observableInput
      * @param obsTimeTransfer
      */
@@ -80,16 +78,30 @@ public class MainActivity extends AppCompatActivity implements Observer{
 
     }
 
+    /**
+     * pulls preferences out of SharedPreferences when the main clock view resumes from setting screen, or from minimize
+     */
     @Override
     protected void onResume() {
         super.onResume();
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        Boolean prefsHourFormat = prefs.getBoolean("hourformat", clock.hourformat);
-        String prefsClockFace = prefs.getString("clockFace", clock.clockface);
-        Boolean prefsPartialSecondsFormat = prefs.getBoolean("partialseconds", clock.partialseconds);
-        clock.clockface = prefsClockFace;
-        clock.hourformat = prefsHourFormat;
-        clock.partialseconds = prefsPartialSecondsFormat;
+        Boolean prefsHourFormat = false;
+        Boolean prefsPartialSecondsFormat = false;
+        String prefsClockFace = "";
+
+        if(prefs.contains("hourFormat")) {
+            prefsHourFormat = prefs.getBoolean("hourFormat", clock.hourFormat);
+        }
+        if(prefs.contains("partialSeconds")) {
+            prefsPartialSecondsFormat = prefs.getBoolean("partialSeconds", clock.partialSeconds);
+        }
+        if(prefs.contains("prefClockFace")) {
+            prefsClockFace = prefs.getString("prefClockFace", clock.GetClockFace());
+        }
+
+        clock.hourFormat = prefsHourFormat;
+        clock.partialSeconds = prefsPartialSecondsFormat;
+        clock.SetClockFace(prefsClockFace);
         clock.invalidate();
     }
 }

@@ -25,10 +25,19 @@ public class Clock extends View implements TimeAnimator.TimeListener {
     final static float[] minuteHand = new float[]{-02.5f, 0, 0, 40.25f, 02.5f, 0, 0, -02.5f, -02.5f, 0};
     final static float[] hourHand = new float[]{-05f, 0, 0, 30.5f, 05f, 0, 0, -05f, -05f, 0};
     int mWidth, mHeight;
-    Boolean hourformat = Boolean.FALSE, partialseconds = Boolean.FALSE ;
-    String clockface = "";
+    Boolean hourFormat = Boolean.FALSE, partialSeconds = Boolean.FALSE ;
+    private String clockFace = "";
+    private static final float mSECOND_DEGREES = 360/-60;
 
     public HourMinSec hourMinSec = new HourMinSec();
+
+    public String GetClockFace() {
+        return clockFace;
+    }
+
+    public void SetClockFace(String newClockFace) {
+        clockFace = newClockFace;
+    }
 
     public Clock(Context context) {
         super(context);
@@ -76,22 +85,22 @@ public class Clock extends View implements TimeAnimator.TimeListener {
     @Override
     public void onDraw(Canvas canvas){
 
-        //pick a clockface
-        if(clockface.equalsIgnoreCase("regular numerals")) {
+        //pick a clock face back ground image
+        if(GetClockFace().equalsIgnoreCase("regular numerals")) {
             Resources resources = getResources();
             Bitmap modernBitmap = BitmapFactory.decodeResource(resources, R.drawable.modern);
             Rect dst = new Rect(0,0,mWidth,mHeight);
             Rect src = new Rect(0,0, modernBitmap.getWidth(), modernBitmap.getHeight());
             canvas.drawBitmap(modernBitmap,null, dst, null);
         }
-        else if(clockface.compareTo("roman numerals") == 0){
+        else if(GetClockFace().equalsIgnoreCase("roman numerals")){
             Resources resources = getResources();
             Bitmap romanBitmap = BitmapFactory.decodeResource(resources, R.drawable.roman);
             Rect dst = new Rect(0,0,mWidth,mHeight);
             Rect src = new Rect(0,0,romanBitmap.getWidth(), romanBitmap.getHeight());
             canvas.drawBitmap(romanBitmap,null, dst, null);
         }
-        else if(clockface.compareTo("crazy face") == 0){
+        else if(GetClockFace().equalsIgnoreCase("crazy face")){
             Resources resources = getResources();
             Bitmap crazyBitmap = BitmapFactory.decodeResource(resources, R.drawable.crazy);
             //Rect dst = new Rect((int)(-overallWidth/2),(int)(overallHeight/2), (int)(overallWidth/2), (int)(overallHeight/2));
@@ -99,7 +108,7 @@ public class Clock extends View implements TimeAnimator.TimeListener {
             Rect src = new Rect(0,0,crazyBitmap.getWidth(),crazyBitmap.getHeight());
             canvas.drawBitmap(crazyBitmap,null, dst, null);
         }
-        else if(clockface.compareTo("math face") == 0){
+        else if(GetClockFace().equalsIgnoreCase("math face")){
             Resources resources = getResources();
             Bitmap mathBitmap = BitmapFactory.decodeResource(resources, R.drawable.math);
             Rect dst = new Rect(0,0,mWidth,mHeight);
@@ -126,6 +135,13 @@ public class Clock extends View implements TimeAnimator.TimeListener {
         canvas.save();
         GregorianCalendar gregorianCalendar = new GregorianCalendar();
 
+        int hour = gregorianCalendar.get(Calendar.HOUR);
+        int minute = gregorianCalendar.get(Calendar.MINUTE);
+        int second = gregorianCalendar.get(Calendar.SECOND);
+        int millisecond = gregorianCalendar.get(Calendar.MILLISECOND);
+
+        float hourTick = 30/60 * minute;
+
         //draw hour hand
         canvas.save();
         paint.setColor(Color.RED);
@@ -136,8 +152,7 @@ public class Clock extends View implements TimeAnimator.TimeListener {
         hourPath.lineTo(hourHand[6], hourHand[7]);
         hourPath.lineTo(hourHand[8], hourHand[9]);
         hourPath.close();
-        int hour = gregorianCalendar.get(Calendar.HOUR_OF_DAY);
-        canvas.rotate(-hour*30);
+        canvas.rotate((mSECOND_DEGREES * 5) * hour + hourTick);
         canvas.drawPath(hourPath, paint);
         canvas.restore();
 
@@ -152,21 +167,19 @@ public class Clock extends View implements TimeAnimator.TimeListener {
         minutePath.lineTo(minuteHand[6], minuteHand[7]);
         minutePath.lineTo(minuteHand[8], minuteHand[9]);
         minutePath.close();
-        int minute = gregorianCalendar.get(Calendar.MINUTE);
-        canvas.rotate(-minute*6);
+        canvas.rotate(mSECOND_DEGREES * minute);
         canvas.drawPath(minutePath, paint);
         canvas.restore();
 
         //draw second hand
         paint.setColor((Color.RED));
-        int second = gregorianCalendar.get(Calendar.SECOND);
-        int millisecond = gregorianCalendar.get(Calendar.MILLISECOND);
         double scaledMillisecond = (second + (millisecond/1000.0));
-        if(partialseconds){
-            canvas.rotate((float)-scaledMillisecond*6);
+
+        if(partialSeconds){
+            canvas.rotate((float)scaledMillisecond * mSECOND_DEGREES);
         }
         else {
-            canvas.rotate(-second * 6);
+            canvas.rotate(second * mSECOND_DEGREES);
         }
         canvas.drawLine(0, 0,0,handLength,paint);
         canvas.restore();
@@ -193,7 +206,7 @@ public class Clock extends View implements TimeAnimator.TimeListener {
 
         canvas.restore();
 
-        if(hourformat) {
+        if(hourFormat) {
             hourMinSec.setHMS(hour, minute, second);
         }
         else{
@@ -241,5 +254,8 @@ public class Clock extends View implements TimeAnimator.TimeListener {
     @Override
     public void onTimeUpdate(TimeAnimator animation, long totalTime, long deltaTime) {
         invalidate();
+        if(!partialSeconds) {
+            //TODO make second hand "click" noise here
+        }
     }
 }
