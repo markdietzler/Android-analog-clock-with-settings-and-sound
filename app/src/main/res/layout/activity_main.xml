@@ -2,7 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/linearlayout"
+    android:id="@+id/root_layout"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     android:gravity="center_horizontal"
@@ -10,7 +10,7 @@
     tools:context=".MainActivity">
 
     <view
-        android:id="@+id/clock"
+        android:id="@+id/analog_clock"
         class="mark.dietzler.mdietzlerlab7.Clock"
         id="@+id/clockFace"
         android:padding="10.0dip"

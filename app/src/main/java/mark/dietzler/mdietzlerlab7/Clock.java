@@ -2,6 +2,8 @@ package mark.dietzler.mdietzlerlab7;
 
 import android.animation.TimeAnimator;
 import android.content.Context;
+import android.content.res.AssetFileDescriptor;
+import android.content.res.AssetManager;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -9,56 +11,105 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Rect;
+import android.media.AudioManager;
+import android.media.SoundPool;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.View;
 import android.graphics.Canvas;
 
+import java.io.IOException;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.Observable;
 
 public class Clock extends View implements TimeAnimator.TimeListener {
 
-    final static float overallWidth = 100.0f, overallHeight = 100.0f, clockRadius = 50.0f, handLength = 40.0f, tailLength = 10.0f;
-    final static float ASPECT_RATIO = 1f;
     TimeAnimator mTimer = new TimeAnimator();
-    final static float[] minuteHand = new float[]{-02.5f, 0, 0, 40.25f, 02.5f, 0, 0, -02.5f, -02.5f, 0};
-    final static float[] hourHand = new float[]{-05f, 0, 0, 30.5f, 05f, 0, 0, -05f, -05f, 0};
-    int mWidth, mHeight;
-    Boolean hourFormat = Boolean.FALSE, partialSeconds = Boolean.FALSE ;
-    private String clockFace = "";
-    private static final float mSECOND_DEGREES = 360/-60;
-
+    SoundPool soundpool;
     public HourMinSec hourMinSec = new HourMinSec();
 
+    //primitives
+    private final static float OVERALL_WIDTH = 100.0f, OVERALL_HEIGHT = 100.0f, M_SECOND_HAND_LENGTH = 38.0f;
+    private final static float ASPECT_RATIO = 1f;
+    private final static float[] mMinute_Hand_Coordinates = new float[]{-02.5f, 0, 0, 40.25f, 02.5f, 0, 0, -02.5f, -02.5f, 0};
+    private final static float[] mHour_Hand_Coordinates = new float[]{-05f, 0, 0, 30.5f, 05f, 0, 0, -05f, -05f, 0};
+    private static final float mDEGREES_SECOND = 360/60;
+    private int mWidth, mHeight, mStoredSecond;
+    private int second_hand_click;
+    private int mUpdateDelay = 0;
+    private long mElapsedTimer;
+    private Boolean mDigital_Clock_24hour_Format = Boolean.FALSE, mPartial_Seconds_Flag = Boolean.FALSE, mPlay_Clock_Tick = false;
+    //strings
+    private String mClock_Face_String = "";
+
+    public void SetUpdateDelay(int newDelay) {
+        mUpdateDelay = newDelay;
+    }
+
+    //setters and getters
+    public boolean get24HourClock(){
+        return mDigital_Clock_24hour_Format;
+    }
+
+    public void set24Clock(boolean newSetting) {
+        mDigital_Clock_24hour_Format = newSetting;
+    }
+
+    public boolean getPartialSeconds() {
+        return mPartial_Seconds_Flag;
+    }
+
+    public void setPartialSeconds(boolean newState) {
+        mPartial_Seconds_Flag = newState;
+    }
+
     public String GetClockFace() {
-        return clockFace;
+        return mClock_Face_String;
     }
 
     public void SetClockFace(String newClockFace) {
-        clockFace = newClockFace;
+        mClock_Face_String = newClockFace;
     }
 
+    //constructors
     public Clock(Context context) {
         super(context);
-        initializeMe();
+        initializeMe(context);
     }
 
     public Clock(Context context, AttributeSet attrs) {
         super(context, attrs);
-        initializeMe();
+        initializeMe(context);
     }
 
     public Clock(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        initializeMe();
+        initializeMe(context);
     }
 
-    private void initializeMe(){
+    private void initializeMe(Context context){
         setLayerType(LAYER_TYPE_SOFTWARE, null);
+        mTimer.setTimeListener(this);
         startTimer();
+        mElapsedTimer = 0;
+
+        //load the click sound
+        soundpool = new SoundPool(10, AudioManager.STREAM_MUSIC,0);
+        try {
+            AssetManager assetManager = context.getAssets();
+            AssetFileDescriptor descriptor;
+
+            descriptor = assetManager.openFd("click.mp3");
+            second_hand_click = soundpool.load(descriptor,0);
+
+        } catch (IOException e) {
+            Log.e("error","failed to load sound files");
+        }
+
     }
 
+    //observer class for updating digital clock in main activity
     class HourMinSec extends Observable{
         int mHour, mMin, mSec;
 
@@ -69,6 +120,7 @@ public class Clock extends View implements TimeAnimator.TimeListener {
         public int getMin() {
             return mMin;
         }
+
         public int getSec() {
             return mSec;
         }
@@ -119,12 +171,12 @@ public class Clock extends View implements TimeAnimator.TimeListener {
 
         float width = getWidth();
         float height = getHeight();
-        float scaleX = (width/overallWidth);
-        float scaleY = (height/overallHeight);
+        float scaleX = (width/ OVERALL_WIDTH);
+        float scaleY = (height/ OVERALL_HEIGHT);
         canvas.save();
 
         canvas.scale(scaleX , -scaleY);
-        canvas.translate(overallWidth/2.0f, -overallHeight/2.0f);
+        canvas.translate(OVERALL_WIDTH /2.0f, -OVERALL_HEIGHT /2.0f);
         Paint paint = new Paint();
 
         paint.setStyle(Paint.Style.STROKE);
@@ -135,24 +187,32 @@ public class Clock extends View implements TimeAnimator.TimeListener {
         canvas.save();
         GregorianCalendar gregorianCalendar = new GregorianCalendar();
 
-        int hour = gregorianCalendar.get(Calendar.HOUR);
-        int minute = gregorianCalendar.get(Calendar.MINUTE);
-        int second = gregorianCalendar.get(Calendar.SECOND);
-        int millisecond = gregorianCalendar.get(Calendar.MILLISECOND);
+        int retrieved_hour = gregorianCalendar.get(Calendar.HOUR);
+        int retrieved_minute = gregorianCalendar.get(Calendar.MINUTE);
+        int retrieved_second = gregorianCalendar.get(Calendar.SECOND);
 
-        float hourTick = 30/60 * minute;
+        if(mStoredSecond != retrieved_second) {
+            mPlay_Clock_Tick = true;
+            mStoredSecond = retrieved_second;
+        } else {
+            //do nothing
+        }
+
+        int retrieved_millisecond = gregorianCalendar.get(Calendar.MILLISECOND);
+
+        float hourTick = 30/60 * retrieved_minute;
 
         //draw hour hand
         canvas.save();
         paint.setColor(Color.RED);
         Path hourPath = new Path();
-        hourPath.moveTo(hourHand[0], hourHand[1]);
-        hourPath.lineTo(hourHand[2], hourHand[3]);
-        hourPath.lineTo(hourHand[4], hourHand[5]);
-        hourPath.lineTo(hourHand[6], hourHand[7]);
-        hourPath.lineTo(hourHand[8], hourHand[9]);
+        hourPath.moveTo(mHour_Hand_Coordinates[0], mHour_Hand_Coordinates[1]);
+        hourPath.lineTo(mHour_Hand_Coordinates[2], mHour_Hand_Coordinates[3]);
+        hourPath.lineTo(mHour_Hand_Coordinates[4], mHour_Hand_Coordinates[5]);
+        hourPath.lineTo(mHour_Hand_Coordinates[6], mHour_Hand_Coordinates[7]);
+        hourPath.lineTo(mHour_Hand_Coordinates[8], mHour_Hand_Coordinates[9]);
         hourPath.close();
-        canvas.rotate((mSECOND_DEGREES * 5) * hour + hourTick);
+        canvas.rotate(-(mDEGREES_SECOND * 5) * retrieved_hour + hourTick);
         canvas.drawPath(hourPath, paint);
         canvas.restore();
 
@@ -161,32 +221,35 @@ public class Clock extends View implements TimeAnimator.TimeListener {
         paint.setColor(Color.BLACK);
         Path minutePath = new Path();
         paint.setStyle(Paint.Style.FILL_AND_STROKE);
-        minutePath.moveTo(minuteHand[0], minuteHand[1]);
-        minutePath.lineTo(minuteHand[2],minuteHand[3]);
-        minutePath.lineTo(minuteHand[4], minuteHand[5]);
-        minutePath.lineTo(minuteHand[6], minuteHand[7]);
-        minutePath.lineTo(minuteHand[8], minuteHand[9]);
+        minutePath.moveTo(mMinute_Hand_Coordinates[0], mMinute_Hand_Coordinates[1]);
+        minutePath.lineTo(mMinute_Hand_Coordinates[2], mMinute_Hand_Coordinates[3]);
+        minutePath.lineTo(mMinute_Hand_Coordinates[4], mMinute_Hand_Coordinates[5]);
+        minutePath.lineTo(mMinute_Hand_Coordinates[6], mMinute_Hand_Coordinates[7]);
+        minutePath.lineTo(mMinute_Hand_Coordinates[8], mMinute_Hand_Coordinates[9]);
         minutePath.close();
-        canvas.rotate(mSECOND_DEGREES * minute);
+        canvas.rotate(-mDEGREES_SECOND * retrieved_minute);
         canvas.drawPath(minutePath, paint);
         canvas.restore();
 
         //draw second hand
         paint.setColor((Color.RED));
-        double scaledMillisecond = (second + (millisecond/1000.0));
 
-        if(partialSeconds){
-            canvas.rotate((float)scaledMillisecond * mSECOND_DEGREES);
+        if(mPartial_Seconds_Flag){
+            // second_plus_scaled_millisecond is the retrieved second PLUS
+            // the retrieved milliseconds divided by 1000 to get a decimal value
+            // i.e. 153 ms / 1000 = .153 plus 1 second = 1.153 seconds
+            double second_plus_scaledMillisecond = (retrieved_second + (retrieved_millisecond/1000.0));
+
+            canvas.rotate((float)second_plus_scaledMillisecond * -mDEGREES_SECOND);
+        } else {
+            canvas.rotate(retrieved_second * -mDEGREES_SECOND);
         }
-        else {
-            canvas.rotate(second * mSECOND_DEGREES);
-        }
-        canvas.drawLine(0, 0,0,handLength,paint);
+        canvas.drawLine(0, 0,0, M_SECOND_HAND_LENGTH,paint);
         canvas.restore();
 
+        paint.setColor(Color.BLACK);
         //draw big circle ticks
         for(int x=0;x<=12;x++){
-            paint.setColor(Color.BLACK);
             canvas.save();
             canvas.rotate(x*30);
             canvas.drawLine(0,40,0,50, paint);
@@ -195,7 +258,6 @@ public class Clock extends View implements TimeAnimator.TimeListener {
 
         //draw little circle ticks
         paint.setStrokeWidth(0.5f);
-        paint.setColor((Color.BLACK));
         for(int i=0;i<=60;i++){
             canvas.save();
             canvas.rotate(i*6);
@@ -203,14 +265,13 @@ public class Clock extends View implements TimeAnimator.TimeListener {
             canvas.restore();
         }
 
-
         canvas.restore();
 
-        if(hourFormat) {
-            hourMinSec.setHMS(hour, minute, second);
+        if(mDigital_Clock_24hour_Format) {
+            hourMinSec.setHMS(retrieved_hour, retrieved_minute, retrieved_second);
         }
         else{
-            hourMinSec.setHMS(gregorianCalendar.get(Calendar.HOUR),minute,second);
+            hourMinSec.setHMS(gregorianCalendar.get(Calendar.HOUR),retrieved_minute,retrieved_second);
         }
     }
 
@@ -239,23 +300,28 @@ public class Clock extends View implements TimeAnimator.TimeListener {
     }
 
     public void startTimer() {
-        mTimer.setTimeListener(new TimeAnimator.TimeListener() {
-            @Override
-            public void onTimeUpdate(TimeAnimator animation, long totalTime, long deltaTime) {
-
-                invalidate();
-            }
-
-        });
         mTimer.start();
     }
 
 
     @Override
-    public void onTimeUpdate(TimeAnimator animation, long totalTime, long deltaTime) {
-        invalidate();
-        if(!partialSeconds) {
-            //TODO make second hand "click" noise here
+    public void onTimeUpdate(TimeAnimator animation, long total_run_Time, long elapsed_since_last_call) {
+
+        if(mElapsedTimer > mUpdateDelay) { //if cumulative deltaTime is greater than the update delay time
+            //set the cumulative deltaTime to zero
+            mElapsedTimer = 0;
+            // invalidate to invoke onDraw
+            invalidate();
+        } else {  //animation delay time not elapsed, add current delta time to cumulative delta time and continue timeanimator animation
+            mElapsedTimer = mElapsedTimer + elapsed_since_last_call;
+        }
+
+        //finally, play the click sound if the second hand has "clicked" (excludes "smooth" second hand animation, obviously)
+        if(mPlay_Clock_Tick && !mPartial_Seconds_Flag) {
+            //play the click sound
+            soundpool.play(second_hand_click,1,1,0,0,1);
+            //set the tick to false again
+            mPlay_Clock_Tick = false;
         }
     }
 }

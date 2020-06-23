@@ -23,7 +23,7 @@ public class MainActivity extends AppCompatActivity implements Observer{
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        clock = (Clock)findViewById(R.id.clock);
+        clock = (Clock)findViewById(R.id.analog_clock);
         timeView = (TextView)findViewById(R.id.digitalClock);
         clock.hourMinSec.addObserver(this);
     }
@@ -42,7 +42,7 @@ public class MainActivity extends AppCompatActivity implements Observer{
         // Handle action bar item clicks here
         int id = item.getItemId();
         if(id == R.id.action_about) {
-            Toast.makeText(this, "Lab 7, Winter 2019, Mark Dietzler",
+            Toast.makeText(this, "Lab 7, Spring 2020, Mark Dietzler",
                     Toast.LENGTH_SHORT)
                     .show();
             return true;
@@ -75,7 +75,6 @@ public class MainActivity extends AppCompatActivity implements Observer{
         } else {
             timeView.setText("XX:XX:XX");
         }
-
     }
 
     /**
@@ -85,23 +84,20 @@ public class MainActivity extends AppCompatActivity implements Observer{
     protected void onResume() {
         super.onResume();
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        Boolean prefsHourFormat = false;
-        Boolean prefsPartialSecondsFormat = false;
-        String prefsClockFace = "";
+        Boolean prefs_24_hour_Format = false;
+        Boolean prefs_Partial_Seconds = false;
+        String prefs_Clock_Face = "";
+        String prefs_Update_Interval = "";
 
-        if(prefs.contains("hourFormat")) {
-            prefsHourFormat = prefs.getBoolean("hourFormat", clock.hourFormat);
-        }
-        if(prefs.contains("partialSeconds")) {
-            prefsPartialSecondsFormat = prefs.getBoolean("partialSeconds", clock.partialSeconds);
-        }
-        if(prefs.contains("prefClockFace")) {
-            prefsClockFace = prefs.getString("prefClockFace", clock.GetClockFace());
-        }
+        prefs_24_hour_Format = prefs.getBoolean("hourFormat", clock.get24HourClock());
+        prefs_Partial_Seconds = prefs.getBoolean("partialSeconds", clock.getPartialSeconds());
+        prefs_Clock_Face = prefs.getString("prefClockFace", clock.GetClockFace());
+        prefs_Update_Interval = prefs.getString("update_pref","100");
 
-        clock.hourFormat = prefsHourFormat;
-        clock.partialSeconds = prefsPartialSecondsFormat;
-        clock.SetClockFace(prefsClockFace);
+        clock.set24Clock(prefs_24_hour_Format);
+        clock.setPartialSeconds(prefs_Partial_Seconds);
+        clock.SetClockFace(prefs_Clock_Face);
+        clock.SetUpdateDelay(Integer.parseInt(prefs_Update_Interval));
         clock.invalidate();
     }
 }

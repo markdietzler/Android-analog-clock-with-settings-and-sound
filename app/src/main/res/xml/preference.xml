@@ -19,4 +19,12 @@
         android:key="prefClockFace"
         android:summary="Current clock face: %s"
         android:title="Clock Face Numerals" />
+    <EditTextPreference
+        android:defaultValue="100"
+        android:inputType="number"
+        android:title="Update Interval (100-5000)"
+        android:summary="100"
+        android:key="update_pref"
+        android:id="@+id/update_interval"
+        />
 </PreferenceScreen>
